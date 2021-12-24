@@ -1,0 +1,153 @@
+
+
+                ;* ------------------------------------------------------------------------- *
+                ;* Name   : GAWGETIM
+                ;* Author : Gerard Wassink
+                ;* Date   : December 24, 2021
+                ;* Purpose: Get RTC time on the RC2014 CP/M computer
+                ;* Versions:
+                ;*   0.1  : Initial code base, and 1st ASM program on CP/M
+                ;*   
+                ;* ------------------------------------------------------------------------- *
+                ;
+                ;* ------------------------------------------------------------------------- *
+                ;*             GNU LICENSE CONDITIONS
+                ;* ------------------------------------------------------------------------- *
+                ;* This program is free software; you can redistribute it and/or modify
+                ;* it under the terms of the GNU General Public License as published by
+                ;* the Free Software Foundation; either version 2 of the License, or
+                ;* (at your option) any later version.
+                ;*
+                ;* This program is distributed in the hope that it will be useful,
+                ;* but WITHOUT ANY WARRANTY; without even the implied warranty of
+                ;* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+                ;* GNU General Public License for more details.
+                ;*
+                ;* You should have received a copy of the GNU General Public License along
+                ;* with this program; if not, write to the Free Software Foundation, Inc.,
+                ;* 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+                ;*
+                ;* ------------------------------------------------------------------------- *
+                ;*       Copyright (C) December 2021 Gerard Wassink
+                ;* ------------------------------------------------------------------------- *
+                ;
+ 0100           START       ORG     0100H
+                ;
+                ; BIOS address and functions
+                ;
+ 0005 =         BDOS        EQU     0005H           ; BDOS address
+ 0009 =         PRTSCR      EQU     009H            ; Print $ terminated string function
+                ;
+ 0020 =         RTCGTTM     EQU     020H            ; Get HBIOS time
+                ;
+ 0100 F5        SAVEREGS    PUSH    A               ; SAVE
+ 0101 C5                    PUSH    B               ;  REGISTERS
+ 0102 D5                    PUSH    D               ;   ON THE STACK
+                            ;
+                            ; Get time from RTC (Real Time Clock)
+                            ;
+ 0103 0620                  MVI     B,RTCGTTM       ; BIOS RTCGETTIM function
+ 0105 215D01                LXI     H,TIMBUF        ; HL points to buffer for BIOS time
+ 0108 CF                    RST     1               ; Call BIOS function 08H (8 times specified value)
+                            ;
+                            ; Convert date to Ascii
+                            ;
+ 0109 015D01                LXI     B,TIMYR         ; BC points to value to convert
+ 010C 118701                LXI     D,DSPY1         ; DE points to receiving buffer
+ 010F CD4B01                CALL    BCD2DISP        ; Convert BCD to displayable
+                            ;
+ 0112 015E01                LXI     B,TIMMT         ; BC points to value to convert
+ 0115 118A01                LXI     D,DSPM1         ; DE points to receiving buffer
+ 0118 CD4B01                CALL    BCD2DISP        ; Convert BCD to displayable
+                            ;
+ 011B 015F01                LXI     B,TIMDY         ; BC points to value to convert
+ 011E 118D01                LXI     D,DSPD1         ; DE points to receiving buffer
+ 0121 CD4B01                CALL    BCD2DISP        ; Convert BCD to displayable
+                            ;
+                            ; Convert time to Ascii
+                            ;
+ 0124 016001                LXI     B,TIMHR         ; BC points to value to convert
+ 0127 119101                LXI     D,DSPH1         ; DE points to receiving buffer
+ 012A CD4B01                CALL    BCD2DISP        ; Convert BCD to displayable
+                            ;
+ 012D 016101                LXI     B,TIMMN         ; BC points to value to convert
+ 0130 119401                LXI     D,DSPI1         ; DE points to receiving buffer
+ 0133 CD4B01                CALL    BCD2DISP        ; Convert BCD to displayable
+                            ;
+ 0136 016201                LXI     B,TIMSC         ; BC points to value to convert
+ 0139 119701                LXI     D,DSPS1         ; DE points to receiving buffer
+ 013C CD4B01                CALL    BCD2DISP        ; Convert BCD to displayable
+                            ;
+ 013F 0E09                  MVI     C,PRTSCR        ; Print string function in reg C
+ 0141 116301                LXI     D,DISPLTIM      ; data address in DE
+ 0144 CD0500                CALL    BDOS            ; call BDOS for print string function
+                            ;
+ 0147 D1        RESTREGS    POP     D               ;  POP REGISTERS
+ 0148 C1                    POP     B               ;   FROM THE
+ 0149 F1                    POP     A               ;    STACK
+                            ;
+ 014A C9                    RET                     ; GO BACK
+                            ;
+                            ;
+                            ; Convert BCD value to two ascii bytes for display
+                            ;
+ 014B =         BCD2DISP    EQU     $
+ 014B 0A                    LDAX    B               ; load BCD value
+ 014C E6F0                  ANI     0F0H            ; Isolate first nibble
+ 014E 0F                    RRC                     ; Rotate
+ 014F 0F                    RRC                     ;  register
+ 0150 0F                    RRC                     ;   A for
+ 0151 0F                    RRC                     ;    four times
+ 0152 F630                  ORI     030H            ; make Ascii number
+ 0154 12                    STAX    D               ; store printable value 1st part
+                            ;
+ 0155 13                    INX     D               ; Increment DE for next store
+                            ;
+ 0156 0A                    LDAX    B               ; load value
+ 0157 E60F                  ANI     00FH            ; Isolate second nibble
+ 0159 F630                  ORI     030H            ; make Ascii number
+ 015B 12                    STAX    D               ; store printable value 2nd part
+                            ;
+ 015C C9                    RET
+                            ;
+                            ; DATA STORAGE
+                            ;
+ 015D =         TIMBUF      EQU     $               ; Reserve room for time buffer
+ 015D 57        TIMYR       DB      57H
+ 015E 12        TIMMT       DB      12H
+ 015F 07        TIMDY       DB      07H
+ 0160 12        TIMHR       DB      12H
+ 0161 34        TIMMN       DB      34H
+ 0162 56        TIMSC       DB      56H
+                ;
+ 0163 =         DISPLTIM    EQU     $               ; Reserve room for displayable time
+ 0163 4375727265            DB      'Current date and time from the RTC: '
+                ;
+ 0187 00        DSPY1       DB      0               ; YEAR
+ 0188 00        DSPY2       DB      0               ;
+ 0189 2D                    DB      '-'             ;
+ 018A 00        DSPM1       DB      0               ; MONTH
+ 018B 00        DSPM2       DB      0               ;
+ 018C 2D                    DB      '-'             ;
+ 018D 00        DSPD1       DB      0               ; DAY
+ 018E 00        DSPD2       DB      0               ;
+                ;
+ 018F 2C                    DB      ','             ;
+ 0190 20                    DB      ' '             ;
+                ;
+ 0191 00        DSPH1       DB      0               ; HOURS
+ 0192 00        DSPH2       DB      0               ;
+ 0193 3A                    DB      ':'             ;
+ 0194 00        DSPI1       DB      0               ; MINUTES
+ 0195 00        DSPI2       DB      0               ;
+ 0196 3A                    DB      ':'             ;
+ 0197 00        DSPS1       DB      0               ; SECONDS
+ 0198 00        DSPS2       DB      0               ;
+                ;
+ 0199 0D                    DB      0DH
+ 019A 0A                    DB      0AH
+                ;
+ 019B 24                    DB      '$'             ; End of string character
+                ;
+ 019C           ENDPROG     END
+
