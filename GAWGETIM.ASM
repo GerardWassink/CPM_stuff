@@ -1,10 +1,11 @@
 ;* ------------------------------------------------------------------------- *
 ;* Name   : GAWGETIM
 ;* Author : Gerard Wassink
-;* Date   : December 24, 2021
+;* Date   : December 25, 2021
 ;* Purpose: Get RTC time on the RC2014 CP/M computer
 ;* Versions:
 ;*   0.1  : Initial code base, and 1st ASM program on CP/M
+;*   0.2  : Code cleanup and optimisation
 ;*   
 ;* ------------------------------------------------------------------------- *
 ;
@@ -31,16 +32,19 @@
 ;
 START       ORG     0100H
 ;
-; BIOS address and functions
+; BDOS and BIOS addresses and functions
 ;
 BDOS        EQU     0005H           ; BDOS address
 PRTSCR      EQU     009H            ; Print $ terminated string function
 ;
 RTCGTTM     EQU     020H            ; Get HBIOS time
 ;
-SAVEREGS    PUSH    A               ; SAVE
-            PUSH    B               ;  REGISTERS
-            PUSH    D               ;   ON THE STACK
+;* ------------------------------------------------------------------------- *
+;*                                                                 MAIN LINE *
+;* ------------------------------------------------------------------------- *
+GAWGETIM    PUSH    B               ; Save
+            PUSH    D               ;  registers
+            PUSH    H               ;   on the stack
             ;
             ; Get time from RTC (Real Time Clock)
             ;
@@ -48,103 +52,89 @@ SAVEREGS    PUSH    A               ; SAVE
             LXI     H,TIMBUF        ; HL points to buffer for BIOS time
             RST     1               ; Call BIOS function 08H (8 times specified value)
             ;
-            ; Convert date to Ascii
+            ; Convert date from BCD to Ascii
             ;
-            LXI     B,TIMYR         ; BC points to value to convert
-            LXI     D,DSPY1         ; DE points to receiving buffer
-            CALL    BCD2DISP        ; Convert BCD to displayable
+            LXI     B,BCDDATE       ; BC points to value to convert
+            LXI     D,DSPDATE       ; DE points to receiving buffer
+            CALL    BCD2ASCII       ; Convert BCD to displayable
             ;
-            LXI     B,TIMMT         ; BC points to value to convert
-            LXI     D,DSPM1         ; DE points to receiving buffer
-            CALL    BCD2DISP        ; Convert BCD to displayable
+            ; Convert time from BCD to Ascii
             ;
-            LXI     B,TIMDY         ; BC points to value to convert
-            LXI     D,DSPD1         ; DE points to receiving buffer
-            CALL    BCD2DISP        ; Convert BCD to displayable
+            LXI     B,BCDTIME       ; BC points to value to convert
+            LXI     D,DSPTIME       ; DE points to receiving buffer
+            CALL    BCD2ASCII       ; Convert BCD to displayable
             ;
-            ; Convert time to Ascii
-            ;
-            LXI     B,TIMHR         ; BC points to value to convert
-            LXI     D,DSPH1         ; DE points to receiving buffer
-            CALL    BCD2DISP        ; Convert BCD to displayable
-            ;
-            LXI     B,TIMMN         ; BC points to value to convert
-            LXI     D,DSPI1         ; DE points to receiving buffer
-            CALL    BCD2DISP        ; Convert BCD to displayable
-            ;
-            LXI     B,TIMSC         ; BC points to value to convert
-            LXI     D,DSPS1         ; DE points to receiving buffer
-            CALL    BCD2DISP        ; Convert BCD to displayable
+            ; Print result string
             ;
             MVI     C,PRTSCR        ; Print string function in reg C
-            LXI     D,DISPLTIM      ; data address in DE
-            CALL    BDOS            ; call BDOS for print string function
+            LXI     D,DISPLTIM      ; Data address in DE
+            CALL    BDOS            ; Call BDOS for print string function
             ;
-RESTREGS    POP     D               ;  POP REGISTERS
-            POP     B               ;   FROM THE
-            POP     A               ;    STACK
+            ; Program end, restore registers and return
             ;
-            RET                     ; GO BACK
+            POP     H               ; Restore registers
+            POP     D               ;  from the
+            POP     B               ;   stack
             ;
+            RET                     ; Go back to caller
             ;
-            ; Convert BCD value to two ascii bytes for display
+;* ------------------------------------------------------------------------- *
+;*                 Convert BCD values to ascii bytes for display (BCD2ASCII) *
+;* ------------------------------------------------------------------------- *
+BCD2ASCII    EQU     $
             ;
-BCD2DISP    EQU     $
-            LDAX    B               ; load BCD value
+            ; Initialize counter
+            ;
+            MVI     A,03H           ; load counter for 3 times
+            STA     COUNT           ;  and store it
+            ;
+            ; Loop start
+            ;
+BCDAGAIN:   LDAX    B               ; load BCD value
             ANI     0F0H            ; Isolate first nibble
             RRC                     ; Rotate
             RRC                     ;  register
             RRC                     ;   A for
             RRC                     ;    four times
-            ORI     030H            ; make Ascii number
-            STAX    D               ; store printable value 1st part
+            ORI     030H            ; Make Ascii number
+            STAX    D               ; Store printable value 1st part
             ;
             INX     D               ; Increment DE for next store
             ;
-            LDAX    B               ; load value
+            LDAX    B               ; load value again
             ANI     00FH            ; Isolate second nibble
-            ORI     030H            ; make Ascii number
-            STAX    D               ; store printable value 2nd part
+            ORI     030H            ; Make Ascii number
+            STAX    D               ; Store printable value 2nd part
+            ;
+            ; Increment pointers to next values
+            ;
+            INX     B               ; Point to next BCD byte
+            INX     D               ; Point to 
+            INX     D               ;   next Ascii value
+            ;
+            ; Check for loop end, go around if not
+            ;
+            LDA     COUNT           ; Get counter value
+            DCR     A               ; Decrement
+            STA     COUNT           ; Store counter back
+            JNZ     BCDAGAIN        ; Not done, again
             ;
             RET
             ;
-            ; DATA STORAGE
+;* ------------------------------------------------------------------------- *
+;*                                                              DATA STORAGE *
+;* ------------------------------------------------------------------------- *
+COUNT       DB      03H             ; Counter storage
             ;
-TIMBUF      EQU     $               ; Reserve room for time buffer
-TIMYR       DB      57H
-TIMMT       DB      12H
-TIMDY       DB      07H
-TIMHR       DB      12H
-TIMMN       DB      34H
-TIMSC       DB      56H
+TIMBUF      EQU     $               ; Reserve room for date / time buffer
+BCDDATE     DB      00H, 00H, 00H
+BCDTIME     DB      00H, 00H, 00H
 ;
 DISPLTIM    EQU     $               ; Reserve room for displayable time
             DB      'Current date and time from the RTC: '
-;
-DSPY1       DB      0               ; YEAR
-DSPY2       DB      0               ;
-            DB      '-'             ;
-DSPM1       DB      0               ; MONTH
-DSPM2       DB      0               ;
-            DB      '-'             ;
-DSPD1       DB      0               ; DAY
-DSPD2       DB      0               ;
-;
-            DB      ','             ;
-            DB      ' '             ;
-;
-DSPH1       DB      0               ; HOURS
-DSPH2       DB      0               ;
-            DB      ':'             ;
-DSPI1       DB      0               ; MINUTES
-DSPI2       DB      0               ;
-            DB      ':'             ;
-DSPS1       DB      0               ; SECONDS
-DSPS2       DB      0               ;
-;
-            DB      0DH
-            DB      0AH
-;
+DSPDATE     DB      '00-00-00, '    ; YEAR, MONTH,DAY
+DSPTIME     DB      '00:00:00'      ; HOURS, MINUTES,SECONDS
+            DB      0DH, 0AH        ; CR/LF
             DB      '$'             ; End of string character
 ;
 ENDPROG     END
