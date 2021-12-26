@@ -1,0 +1,122 @@
+
+
+                ;* ------------------------------------------------------------------------- *
+                ;* Name   : GAWLOGO
+                ;* Author : Gerard Wassink
+                ;* Date   : December 26, 2021
+                ;* Purpose: Logo for my machine
+                ;* Versions:
+                ;*   0.1  : Initial code base
+                ;*   
+                ;* ------------------------------------------------------------------------- *
+                ;
+                ;* ------------------------------------------------------------------------- *
+                ;*             GNU LICENSE CONDITIONS
+                ;* ------------------------------------------------------------------------- *
+                ;* This program is free software; you can redistribute it and/or modify
+                ;* it under the terms of the GNU General Public License as published by
+                ;* the Free Software Foundation; either version 2 of the License, or
+                ;* (at your option) any later version.
+                ;*
+                ;* This program is distributed in the hope that it will be useful,
+                ;* but WITHOUT ANY WARRANTY; without even the implied warranty of
+                ;* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+                ;* GNU General Public License for more details.
+                ;*
+                ;* You should have received a copy of the GNU General Public License along
+                ;* with this program; if not, write to the Free Software Foundation, Inc.,
+                ;* 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+                ;*
+                ;* ------------------------------------------------------------------------- *
+                ;*       Copyright (C) December 2021 Gerard Wassink
+                ;* ------------------------------------------------------------------------- *
+                ;
+ 0100           START       ORG     0100H
+                ;
+                ; BDOS and BIOS addresses and functions
+                ;
+ 0005 =         BDOS        EQU     0005H           ; BDOS address
+ 0009 =         PRTSCR      EQU     009H            ; Print $ terminated string function
+                ;
+                ;* ------------------------------------------------------------------------- *
+                ;*                                                       TERMINAL ATTRIBUTES
+                ;* ------------------------------------------------------------------------- *
+ 001B =         ESC         EQU     27
+ 005B =         BRACKET     EQU     '['
+ 000D =         CR          EQU     13
+ 000A =         LF          EQU     10
+ 0024 =         EOS         EQU     '$'
+                ;
+                ;* ------------------------------------------------------------------------- *
+                ;*                                                                 MAIN LINE *
+                ;* ------------------------------------------------------------------------- *
+ 0100 C5        GAWMANDL    PUSH    B               ; Save
+ 0101 D5                    PUSH    D               ;  registers
+ 0102 E5                    PUSH    H               ;   on the stack
+                            ;
+                            ; Print header lines
+                            ;
+ 0103 0E09                  MVI     C,PRTSCR        ; Print string function in reg C
+ 0105 11B904                LXI     D,CYAN          ; Data address in DE
+ 0108 CD0500                CALL    BDOS            ; Call BDOS for print string function
+                            ;
+ 010B 0E09                  MVI     C,PRTSCR        ; Print string function in reg C
+ 010D 111F01                LXI     D,LOGO       ; Data address in DE
+ 0110 CD0500                CALL    BDOS            ; Call BDOS for print string function
+                            ;
+                            ; Reset screen attributes
+                            ;
+ 0113 0E09                  MVI     C,PRTSCR        ; Print string function in reg C
+ 0115 11C504                LXI     D,RESET         ; Data address in DE
+ 0118 CD0500                CALL    BDOS            ; Call BDOS for print string function
+                            ;
+                            ; Program end, restore registers and return
+                            ;
+ 011B E1                    POP     H               ; Restore registers
+ 011C D1                    POP     D               ;  from the
+ 011D C1                    POP     B               ;   stack
+                            ;
+ 011E C9                    RET                     ; Go back to caller
+                            ;
+                ;* ------------------------------------------------------------------------- *
+                ;*                                                              DATA STORAGE *
+                ;* ------------------------------------------------------------------------- *
+                ;
+                ; Text Strings
+                ;
+ 011F 2020202020LOGO        DB      '                                                         ', CR, LF
+ 015A 20205F5F20            DB      '  __ __                                                  ', CR, LF
+ 0195 207C20205F            DB      ' |  __ \                                                 ', CR, LF
+ 01D0 207C207C20            DB      ' | |  | | _____   _____  _ __ ___                        ', CR, LF
+ 020B 207C207C20            DB      ' | |  | |/ _ \ \ / / _ \| /__/ _ \                       ', CR, LF
+ 0246 207C207C5F            DB      ' | |__| |  __/\ V / (_) | | |  __/                       ', CR, LF
+ 0281 207C5F5F5F            DB      ' |_____/ \___| \_/ \___/|_|  \___|                       ', CR, LF
+ 02BC 2020202020            DB      '                                                         ', CR, LF
+ 02F7 202020204E            DB      '    NCC-64088 - Akira class                              ', CR, LF
+ 0332 2020202020            DB      '                                                         ', CR, LF
+ 036D 2020202052            DB      '    RC2014 - Retro Computing 2014                        ', CR, LF
+ 03A8 2020202048            DB      '    Home built Z80 computer                              ', CR, LF
+ 03E3 2020202052            DB      '    Running Z-system CP/M                                ', CR, LF
+ 041E 2020202020            DB      '                                                         ', CR, LF
+ 0459 2020202020            DB      '                                                         ', CR, LF
+ 0494 24                    DB      EOS
+                ;
+                ;
+ 0495 1B5B33306DBLACK       DB      ESC, BRACKET, '30m', EOS
+ 049B 1B5B33316DRED         DB      ESC, BRACKET, '31m', EOS
+ 04A1 1B5B33326DGREEN       DB      ESC, BRACKET, '32m', EOS
+ 04A7 1B5B33336DYELLOW      DB      ESC, BRACKET, '33m', EOS
+ 04AD 1B5B33346DBLUE        DB      ESC, BRACKET, '34m', EOS
+ 04B3 1B5B33356DMAGENTA     DB      ESC, BRACKET, '35m', EOS
+ 04B9 1B5B33366DCYAN        DB      ESC, BRACKET, '36m', EOS
+ 04BF 1B5B33376DWHITE       DB      ESC, BRACKET, '37m', EOS
+ 04C5 1B5B306D24RESET       DB      ESC, BRACKET,  '0m', EOS
+                ;
+                ;
+ 04CA 1B5B303B30TOPLEFT     DB      ESC, BRACKET, '0;0H', EOS
+                ;
+                    ; Variables
+                ;
+                ;
+                ;
+ 04D1           ENDPROG     END                     ; assembly stops here
