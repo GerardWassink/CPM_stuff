@@ -6,6 +6,7 @@
 ;* Versions:
 ;*   0.1  : Initial code base, and 1st ASM program on CP/M
 ;*   0.2  : Code cleanup and optimisation
+;*   0.3  : Return to CP/M using Warm Reboot
 ;*   
 ;* ------------------------------------------------------------------------- *
 ;
@@ -34,6 +35,7 @@ START       ORG     0100H
 ;
 ; BDOS and BIOS addresses and functions
 ;
+WARMBOOT    EQU     0000H           ; Warm Reboot
 BDOS        EQU     0005H           ; BDOS address
 PRTSCR      EQU     009H            ; Print $ terminated string function
 ;
@@ -76,7 +78,7 @@ GAWGETIM    PUSH    B               ; Save
             POP     D               ;  from the
             POP     B               ;   stack
             ;
-            RET                     ; Go back to caller
+            JMP     WARMBOOT        ; Back to CP/M
             ;
 ;* ------------------------------------------------------------------------- *
 ;*                 Convert BCD values to ascii bytes for display (BCD2ASCII) *

@@ -36,6 +36,7 @@
                 ;
                 ; BDOS and BIOS addresses and functions
                 ;
+ 0000 =         WARMBOOT    EQU     0000H           ; Warm Reboot
  0005 =         BDOS        EQU     0005H           ; BDOS address
  0009 =         PRTSCR      EQU     009H            ; Print $ terminated string function
                 ;
@@ -51,25 +52,25 @@
                             ; Get time from RTC (Real Time Clock)
                             ;
  0103 0620                  MVI     B,RTCGTTM       ; BIOS RTCGETTIM function
- 0105 214C01                LXI     H,TIMBUF        ; HL points to buffer for BIOS time
+ 0105 214E01                LXI     H,TIMBUF        ; HL points to buffer for BIOS time
  0108 CF                    RST     1               ; Call BIOS function 08H (8 times specified value)
                             ;
                             ; Convert date from BCD to Ascii
                             ;
- 0109 014C01                LXI     B,BCDDATE       ; BC points to value to convert
- 010C 117601                LXI     D,DSPDATE       ; DE points to receiving buffer
- 010F CD2701                CALL    BCD2ASCII       ; Convert BCD to displayable
+ 0109 014E01                LXI     B,BCDDATE       ; BC points to value to convert
+ 010C 117801                LXI     D,DSPDATE       ; DE points to receiving buffer
+ 010F CD2901                CALL    BCD2ASCII       ; Convert BCD to displayable
                             ;
                             ; Convert time from BCD to Ascii
                             ;
- 0112 014F01                LXI     B,BCDTIME       ; BC points to value to convert
- 0115 118001                LXI     D,DSPTIME       ; DE points to receiving buffer
- 0118 CD2701                CALL    BCD2ASCII       ; Convert BCD to displayable
+ 0112 015101                LXI     B,BCDTIME       ; BC points to value to convert
+ 0115 118201                LXI     D,DSPTIME       ; DE points to receiving buffer
+ 0118 CD2901                CALL    BCD2ASCII       ; Convert BCD to displayable
                             ;
                             ; Print result string
                             ;
  011B 0E09                  MVI     C,PRTSCR        ; Print string function in reg C
- 011D 115201                LXI     D,DISPLTIM      ; Data address in DE
+ 011D 115401                LXI     D,DISPLTIM      ; Data address in DE
  0120 CD0500                CALL    BDOS            ; Call BDOS for print string function
                             ;
                             ; Program end, restore registers and return
@@ -78,65 +79,65 @@
  0124 D1                    POP     D               ;  from the
  0125 C1                    POP     B               ;   stack
                             ;
- 0126 C9                    RET                     ; Go back to caller
+ 0126 C30000                JMP     WARMBOOT        ; Back to CP/M
                             ;
                 ;* ------------------------------------------------------------------------- *
                 ;*                 Convert BCD values to ascii bytes for display (BCD2ASCII) *
                 ;* ------------------------------------------------------------------------- *
- 0127 =         BCD2ASCII    EQU     $
+ 0129 =         BCD2ASCII    EQU     $
                             ;
                             ; Initialize counter
                             ;
- 0127 3E03                  MVI     A,03H           ; load counter for 3 times
- 0129 324B01                STA     COUNT           ;  and store it
+ 0129 3E03                  MVI     A,03H           ; load counter for 3 times
+ 012B 324D01                STA     COUNT           ;  and store it
                             ;
                             ; Loop start
                             ;
- 012C 0A        BCDAGAIN:   LDAX    B               ; load BCD value
- 012D E6F0                  ANI     0F0H            ; Isolate first nibble
- 012F 0F                    RRC                     ; Rotate
- 0130 0F                    RRC                     ;  register
- 0131 0F                    RRC                     ;   A for
- 0132 0F                    RRC                     ;    four times
- 0133 F630                  ORI     030H            ; Make Ascii number
- 0135 12                    STAX    D               ; Store printable value 1st part
+ 012E 0A        BCDAGAIN:   LDAX    B               ; load BCD value
+ 012F E6F0                  ANI     0F0H            ; Isolate first nibble
+ 0131 0F                    RRC                     ; Rotate
+ 0132 0F                    RRC                     ;  register
+ 0133 0F                    RRC                     ;   A for
+ 0134 0F                    RRC                     ;    four times
+ 0135 F630                  ORI     030H            ; Make Ascii number
+ 0137 12                    STAX    D               ; Store printable value 1st part
                             ;
- 0136 13                    INX     D               ; Increment DE for next store
+ 0138 13                    INX     D               ; Increment DE for next store
                             ;
- 0137 0A                    LDAX    B               ; load value again
- 0138 E60F                  ANI     00FH            ; Isolate second nibble
- 013A F630                  ORI     030H            ; Make Ascii number
- 013C 12                    STAX    D               ; Store printable value 2nd part
+ 0139 0A                    LDAX    B               ; load value again
+ 013A E60F                  ANI     00FH            ; Isolate second nibble
+ 013C F630                  ORI     030H            ; Make Ascii number
+ 013E 12                    STAX    D               ; Store printable value 2nd part
                             ;
                             ; Increment pointers to next values
                             ;
- 013D 03                    INX     B               ; Point to next BCD byte
- 013E 13                    INX     D               ; Point to 
- 013F 13                    INX     D               ;   next Ascii value
+ 013F 03                    INX     B               ; Point to next BCD byte
+ 0140 13                    INX     D               ; Point to 
+ 0141 13                    INX     D               ;   next Ascii value
                             ;
                             ; Check for loop end, go around if not
                             ;
- 0140 3A4B01                LDA     COUNT           ; Get counter value
- 0143 3D                    DCR     A               ; Decrement
- 0144 324B01                STA     COUNT           ; Store counter back
- 0147 C22C01                JNZ     BCDAGAIN        ; Not done, again
+ 0142 3A4D01                LDA     COUNT           ; Get counter value
+ 0145 3D                    DCR     A               ; Decrement
+ 0146 324D01                STA     COUNT           ; Store counter back
+ 0149 C22E01                JNZ     BCDAGAIN        ; Not done, again
                             ;
- 014A C9                    RET
+ 014C C9                    RET
                             ;
                 ;* ------------------------------------------------------------------------- *
                 ;*                                                              DATA STORAGE *
                 ;* ------------------------------------------------------------------------- *
- 014B 03        COUNT       DB      03H             ; Counter storage
+ 014D 03        COUNT       DB      03H             ; Counter storage
                             ;
- 014C =         TIMBUF      EQU     $               ; Reserve room for date / time buffer
- 014C 000000    BCDDATE     DB      00H, 00H, 00H
- 014F 000000    BCDTIME     DB      00H, 00H, 00H
+ 014E =         TIMBUF      EQU     $               ; Reserve room for date / time buffer
+ 014E 000000    BCDDATE     DB      00H, 00H, 00H
+ 0151 000000    BCDTIME     DB      00H, 00H, 00H
                 ;
- 0152 =         DISPLTIM    EQU     $               ; Reserve room for displayable time
- 0152 4375727265            DB      'Current date and time from the RTC: '
- 0176 30302D3030DSPDATE     DB      '00-00-00, '    ; YEAR, MONTH,DAY
- 0180 30303A3030DSPTIME     DB      '00:00:00'      ; HOURS, MINUTES,SECONDS
- 0188 0D0A                  DB      0DH, 0AH        ; CR/LF
- 018A 24                    DB      '$'             ; End of string character
+ 0154 =         DISPLTIM    EQU     $               ; Reserve room for displayable time
+ 0154 4375727265            DB      'Current date and time from the RTC: '
+ 0178 30302D3030DSPDATE     DB      '00-00-00, '    ; YEAR, MONTH,DAY
+ 0182 30303A3030DSPTIME     DB      '00:00:00'      ; HOURS, MINUTES,SECONDS
+ 018A 0D0A                  DB      0DH, 0AH        ; CR/LF
+ 018C 24                    DB      '$'             ; End of string character
                 ;
- 018B           ENDPROG     END
+ 018D           ENDPROG     END
