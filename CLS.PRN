@@ -1,0 +1,94 @@
+
+
+                ;* ------------------------------------------------------------------------- *
+                ;* Name   : CLS
+                ;* Author : Gerard Wassink
+                ;* Date   : December 28, 2021
+                ;* Purpose: Just clear the screen and reset the terminal
+                ;* Versions:
+                ;*   0.1  : Initial code base
+                ;*   
+                ;* ------------------------------------------------------------------------- *
+                ;
+                ;* ------------------------------------------------------------------------- *
+                ;*             GNU LICENSE CONDITIONS
+                ;* ------------------------------------------------------------------------- *
+                ;* This program is free software; you can redistribute it and/or modify
+                ;* it under the terms of the GNU General Public License as published by
+                ;* the Free Software Foundation; either version 2 of the License, or
+                ;* (at your option) any later version.
+                ;*
+                ;* This program is distributed in the hope that it will be useful,
+                ;* but WITHOUT ANY WARRANTY; without even the implied warranty of
+                ;* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+                ;* GNU General Public License for more details.
+                ;*
+                ;* You should have received a copy of the GNU General Public License along
+                ;* with this program; if not, write to the Free Software Foundation, Inc.,
+                ;* 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+                ;*
+                ;* ------------------------------------------------------------------------- *
+                ;*       Copyright (C) December 2021 Gerard Wassink
+                ;* ------------------------------------------------------------------------- *
+                ;
+ 0100           START       ORG     0100H
+                ;
+                ; BDOS and BIOS addresses and functions
+                ;
+ 0000 =         REBOOT      EQU     0000H           ; Warm reboot CP/M
+ 0005 =         BDOS        EQU     0005H           ; BDOS address
+ 0009 =         PRTSCR      EQU     009H            ; Print $ terminated string function
+                ;
+                ;* ------------------------------------------------------------------------- *
+                ;*                                                        Terminal ESC codes
+                ;* ------------------------------------------------------------------------- *
+ 001B =         ESC         EQU     27
+ 005B =         BRACKET     EQU     '['
+ 0024 =         EOS         EQU     '$'
+                ;
+                ;* ------------------------------------------------------------------------- *
+                ;*                                                                 Main line *
+                ;* ------------------------------------------------------------------------- *
+ 0100 C5                    PUSH    B               ; Save
+ 0101 D5                    PUSH    D               ;  registers
+ 0102 E5                    PUSH    H               ;   on the stack
+                            ;
+                            ;       Reset Screen
+                            ;
+ 0103 0E09                  MVI     C,PRTSCR        ; Print string function in reg C
+ 0105 112401                LXI     D,RESET         ; Data address in DE
+ 0108 CD0500                CALL    BDOS            ; Call BDOS for print string function
+                            ;
+                            ;       Clear Screen
+                            ;
+ 010B 0E09                  MVI     C,PRTSCR        ; Print string function in reg C
+ 010D 111F01                LXI     D,CLS           ; Data address in DE
+ 0110 CD0500                CALL    BDOS            ; Call BDOS for print string function
+                            ;
+                            ;       Cursor home
+                            ;
+ 0113 0E09                  MVI     C,PRTSCR        ; Print string function in reg C
+ 0115 112901                LXI     D,HOME          ; Data address in DE
+ 0118 CD0500                CALL    BDOS            ; Call BDOS for print string function
+                            ;
+                            ;
+                            ; Program end, restore registers and return
+                            ;
+ 011B E1                    POP     H               ; Restore registers
+ 011C D1                    POP     D               ;  from the
+ 011D C1                    POP     B               ;   stack
+                            ;
+ 011E C9                    RET                     ; Back to CP/M
+                ;
+                ;
+                ;* ------------------------------------------------------------------------- *
+                ;*                                                              DATA STORAGE *
+                ;* ------------------------------------------------------------------------- *
+                ;
+                ; Text Strings
+                ;
+ 011F 1B5B324A24CLS         DB      ESC, BRACKET,  '2J', EOS
+ 0124 1B5B306D24RESET       DB      ESC, BRACKET,  '0m', EOS
+ 0129 1B5B323B32HOME        DB      ESC, BRACKET,  '2;2H', EOS
+                ;
+ 0130           ENDPROG     END                     ; assembly stops here
