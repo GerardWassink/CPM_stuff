@@ -1,10 +1,10 @@
 ;* ------------------------------------------------------------------------- *
 ;* Name   : CLS
 ;* Author : Gerard Wassink
-;* Date   : December 28, 2021
+;* Date   : December 29, 2021
 ;* Purpose: Just clear the screen and reset the terminal
 ;* Versions:
-;*   0.1  : Initial code base
+;*   0.1  : Stripped unnessecary code
 ;*   
 ;* ------------------------------------------------------------------------- *
 ;
@@ -30,64 +30,20 @@
 ;* ------------------------------------------------------------------------- *
 ;
 START       ORG     0100H
-;
-; BDOS and BIOS addresses and functions
-;
-REBOOT      EQU     0000H           ; Warm reboot CP/M
-BDOS        EQU     0005H           ; BDOS address
-PRTSCR      EQU     009H            ; Print $ terminated string function
-;
-;* ------------------------------------------------------------------------- *
-;*                                                        Terminal ESC codes
-;* ------------------------------------------------------------------------- *
-ESC         EQU     27
-BRACKET     EQU     '['
-EOS         EQU     '$'
-;
-;* ------------------------------------------------------------------------- *
-;*                                                                 Main line *
-;* ------------------------------------------------------------------------- *
-            PUSH    B               ; Save
-            PUSH    D               ;  registers
-            PUSH    H               ;   on the stack
             ;
-            ;       Reset Screen
+            ;       Reset and clear Screen, cursor home
             ;
-            MVI     C,PRTSCR        ; Print string function in reg C
+            MVI     C,09H           ; Print string function in reg C
             LXI     D,RESET         ; Data address in DE
-            CALL    BDOS            ; Call BDOS for print string function
+            CALL    0005H           ; Call BDOS for print string function
             ;
-            ;       Clear Screen
-            ;
-            MVI     C,PRTSCR        ; Print string function in reg C
-            LXI     D,CLS           ; Data address in DE
-            CALL    BDOS            ; Call BDOS for print string function
-            ;
-            ;       Cursor home
-            ;
-            MVI     C,PRTSCR        ; Print string function in reg C
-            LXI     D,HOME          ; Data address in DE
-            CALL    BDOS            ; Call BDOS for print string function
-            ;
-            ;
-            ; Program end, restore registers and return
-            ;
-            POP     H               ; Restore registers
-            POP     D               ;  from the
-            POP     B               ;   stack
+            ;       Return to CP/M
             ;
             RET                     ; Back to CP/M
 ;
+;           Terminal ESC codes
 ;
-;* ------------------------------------------------------------------------- *
-;*                                                              DATA STORAGE *
-;* ------------------------------------------------------------------------- *
-;
-; Text Strings
-;
-CLS         DB      ESC, BRACKET,  '2J', EOS
-RESET       DB      ESC, BRACKET,  '0m', EOS
-HOME        DB      ESC, BRACKET,  '2;2H', EOS
+RESET       DB      27, '[2J', 27, '[0m', 27, '[1;1H$'
 ;
 ENDPROG     END                     ; assembly stops here
 ;
