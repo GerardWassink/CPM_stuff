@@ -1,0 +1,55 @@
+                00001 ;* ------------------------------------------------------------------------- *
+                00002 ;* Name   : CLS
+                00003 ;* Author : Gerard Wassink
+                00004 ;* Date   : December 29, 2021
+                00005 ;* Purpose: Just clear the screen and reset the terminal
+                00006 ;* Versions:
+                00007 ;*   0.1  : Stripped unnessecary code
+                00008 ;*   0.2  : Adapted for Z80ASM assembler
+                00009 ;*   
+                00010 ;* ------------------------------------------------------------------------- *
+                00011 ;
+                00012 ;* ------------------------------------------------------------------------- *
+                00013 ;*             GNU LICENSE CONDITIONS
+                00014 ;* ------------------------------------------------------------------------- *
+                00015 ;* This program is free software; you can redistribute it and/or modify
+                00016 ;* it under the terms of the GNU General Public License as published by
+                00017 ;* the Free Software Foundation; either version 2 of the License, or
+                00018 ;* (at your option) any later version.
+                00019 ;*
+                00020 ;* This program is distributed in the hope that it will be useful,
+                00021 ;* but WITHOUT ANY WARRANTY; without even the implied warranty of
+                00022 ;* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+                00023 ;* GNU General Public License for more details.
+                00024 ;*
+                00025 ;* You should have received a copy of the GNU General Public License along
+                00026 ;* with this program; if not, write to the Free Software Foundation, Inc.,
+                00027 ;* 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+                00028 ;*
+                00029 ;* ------------------------------------------------------------------------- *
+                00030 ;*       Copyright (C) December 2021 Gerard Wassink
+                00031 ;* ------------------------------------------------------------------------- *
+                00032 ;
+                00033 START       ORG     0100H
+                00034             ;
+                00035             ;       Reset and clear Screen, cursor home
+                00036             ;
+0100  0E09      00037             LD      C,09H           ; Print string function in reg C
+0102  110901    00038             LD      DE,RESET        ; Data address in DE
+0105  CD0500    00039             CALL    0005H           ; Call BDOS for print string function
+                00040             ;
+                00041             ;       Return to CP/M
+                00042             ;
+0108  C9        00043             RET                     ; Back to CP/M
+                00044 ;
+                00045 ;           Terminal ESC codes
+                00046 ;
+0109  1B5B324A  00047 RESET       DB      27, '[2J', 27, '[0m', 27, '[1;1H$'
+      1B 5B 30 6D 1B 5B 31 3B
+      31 48 24               
+                00048 ;
+                00049 ENDPROG     END                     ; assembly stops here
+
+
+ENDPROG         0118  RESET           0109  START           0000  
+
