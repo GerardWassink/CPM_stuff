@@ -5,6 +5,7 @@
 ;* Purpose: Just clear the screen and reset the terminal
 ;* Versions:
 ;*   0.1  : Stripped unnessecary code
+;*   0.2  : Adapted for Z80ASM assembler
 ;*   
 ;* ------------------------------------------------------------------------- *
 ;
@@ -33,8 +34,8 @@ START       ORG     0100H
             ;
             ;       Reset and clear Screen, cursor home
             ;
-            MVI     C,09H           ; Print string function in reg C
-            LXI     D,RESET         ; Data address in DE
+            LD      C,09H           ; Print string function in reg C
+            LD      DE,RESET        ; Data address in DE
             CALL    0005H           ; Call BDOS for print string function
             ;
             ;       Return to CP/M
