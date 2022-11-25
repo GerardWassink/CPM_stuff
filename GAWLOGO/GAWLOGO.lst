@@ -1,0 +1,242 @@
+                00001 ;* ------------------------------------------------------------------------- *
+                00002 ;* Name   : GAWLOGO
+                00003 ;* Author : Gerard Wassink
+                00004 ;* Date   : December 26, 2021
+                00005 ;* Purpose: Logo for my machine
+                00006 ;* Versions:
+                00007 ;*   0.1  : Initial code base
+                00008 ;*   0.2  : Adapted for Z80ASM assembler
+                00009 ;*   
+                00010 ;* ------------------------------------------------------------------------- *
+                00011 ;
+                00012 ;* ------------------------------------------------------------------------- *
+                00013 ;*             GNU LICENSE CONDITIONS
+                00014 ;* ------------------------------------------------------------------------- *
+                00015 ;* This program is free software; you can redistribute it and/or modify
+                00016 ;* it under the terms of the GNU General Public License as published by
+                00017 ;* the Free Software Foundation; either version 2 of the License, or
+                00018 ;* (at your option) any later version.
+                00019 ;*
+                00020 ;* This program is distributed in the hope that it will be useful,
+                00021 ;* but WITHOUT ANY WARRANTY; without even the implied warranty of
+                00022 ;* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+                00023 ;* GNU General Public License for more details.
+                00024 ;*
+                00025 ;* You should have received a copy of the GNU General Public License along
+                00026 ;* with this program; if not, write to the Free Software Foundation, Inc.,
+                00027 ;* 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+                00028 ;*
+                00029 ;* ------------------------------------------------------------------------- *
+                00030 ;*       Copyright (C) December 2021 Gerard Wassink
+                00031 ;* ------------------------------------------------------------------------- *
+                00032 ;
+                00033 START       ORG     0100H
+                00034 ;
+                00035 ; BDOS and BIOS addresses and functions
+                00036 ;
+    = 0005      00037 BDOS        EQU     0005H           ; BDOS address
+    = 0009      00038 PRTSCR      EQU     009H            ; Print $ terminated string function
+                00039 ;
+                00040 ;* ------------------------------------------------------------------------- *
+                00041 ;*                                                       TERMINAL ATTRIBUTES
+                00042 ;* ------------------------------------------------------------------------- *
+    = 001B      00043 ESC         EQU     27
+    = 005B      00044 BRACKET     EQU     '['
+    = 000D      00045 CR          EQU     13
+    = 000A      00046 LF          EQU     10
+    = 0024      00047 EOS         EQU     '$'
+                00048 ;
+                00049 ;* ------------------------------------------------------------------------- *
+                00050 ;*                                                                 MAIN LINE *
+                00051 ;* ------------------------------------------------------------------------- *
+0100  C5        00052 GAWMANDL    PUSH    BC              ; Save
+0101  D5        00053             PUSH    DE              ;  registers
+0102  E5        00054             PUSH    HL              ;   on the stack
+                00055             ;
+                00056             ; Print header lines
+                00057             ;
+0103  0E09      00058             LD      C,PRTSCR        ; Print string function in reg C
+0105  11B904    00059             LD      DE,CYAN         ; Data address in DE
+0108  CD0500    00060             CALL    BDOS            ; Call BDOS for print string function
+                00061             ;
+010B  0E09      00062             LD      C,PRTSCR        ; Print string function in reg C
+010D  111F01    00063             LD      DE,LOGO         ; Data address in DE
+0110  CD0500    00064             CALL    BDOS            ; Call BDOS for print string function
+                00065             ;
+                00066             ; Reset screen attributes
+                00067             ;
+0113  0E09      00068             LD      C,PRTSCR        ; Print string function in reg C
+0115  11C504    00069             LD      DE,RESET        ; Data address in DE
+0118  CD0500    00070             CALL    BDOS            ; Call BDOS for print string function
+                00071             ;
+                00072             ; Program end, restore registers and return
+                00073             ;
+011B  E1        00074             POP     HL              ; Restore registers
+011C  D1        00075             POP     DE              ;  from the
+011D  C1        00076             POP     BC              ;   stack
+                00077             ;
+011E  C9        00078             RET                     ; Go back to caller
+                00079             ;
+                00080 ;* ------------------------------------------------------------------------- *
+                00081 ;*                                                              DATA STORAGE *
+                00082 ;* ------------------------------------------------------------------------- *
+                00083 ;
+                00084 ; Text Strings
+                00085 ;
+011F  20202020  00086 LOGO        DB      '                                                         ', CR, LF
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 0D 0A   
+015A  20205F5F  00087             DB      '  __ __                                                  ', CR, LF
+      20 5F 5F 20 20 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 0D 0A   
+0195  207C2020  00088             DB      ' |  __ \                                                 ', CR, LF
+      5F 5F 20 5C 20 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 0D 0A   
+01D0  207C207C  00089             DB      ' | |  | | _____   _____  _ __ ___                        ', CR, LF
+      20 20 7C 20 7C 20 5F 5F
+      5F 5F 5F 20 20 20 5F 5F
+      5F 5F 5F 20 20 5F 20 5F
+      5F 20 5F 5F 5F 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 0D 0A   
+020B  207C207C  00090             DB      ' | |  | |/ _ \ \ / / _ \| /__/ _ \                       ', CR, LF
+      20 20 7C 20 7C 2F 20 5F
+      20 5C 20 5C 20 2F 20 2F
+      20 5F 20 5C 7C 20 2F 5F
+      5F 2F 20 5F 20 5C 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 0D 0A   
+0246  207C207C  00091             DB      ' | |__| |  __/\ V / (_) | | |  __/                       ', CR, LF
+      5F 5F 7C 20 7C 20 20 5F
+      5F 2F 5C 20 56 20 2F 20
+      28 5F 29 20 7C 20 7C 20
+      7C 20 20 5F 5F 2F 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 0D 0A   
+0281  207C5F5F  00092             DB      ' |_____/ \___| \_/ \___/|_|  \___|                       ', CR, LF
+      5F 5F 5F 2F 20 5C 5F 5F
+      5F 7C 20 5C 5F 2F 20 5C
+      5F 5F 5F 2F 7C 5F 7C 20
+      20 5C 5F 5F 5F 7C 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 0D 0A   
+02BC  20202020  00093             DB      '                                                         ', CR, LF
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 0D 0A   
+02F7  20202020  00094             DB      '    NCC-64088 - Akira class                              ', CR, LF
+      4E 43 43 2D 36 34 30 38
+      38 20 2D 20 41 6B 69 72
+      61 20 63 6C 61 73 73 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 0D 0A   
+0332  20202020  00095             DB      '                                                         ', CR, LF
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 0D 0A   
+036D  20202020  00096             DB      '    RC2014 - Retro Computing 2014                        ', CR, LF
+      52 43 32 30 31 34 20 2D
+      20 52 65 74 72 6F 20 43
+      6F 6D 70 75 74 69 6E 67
+      20 32 30 31 34 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 0D 0A   
+03A8  20202020  00097             DB      '    Home built Z80 computer                              ', CR, LF
+      48 6F 6D 65 20 62 75 69
+      6C 74 20 5A 38 30 20 63
+      6F 6D 70 75 74 65 72 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 0D 0A   
+03E3  20202020  00098             DB      '    Running Z-system CP/M                                ', CR, LF
+      52 75 6E 6E 69 6E 67 20
+      5A 2D 73 79 73 74 65 6D
+      20 43 50 2F 4D 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 0D 0A   
+041E  20202020  00099             DB      '                                                         ', CR, LF
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 0D 0A   
+0459  20202020  00100             DB      '                                                         ', CR, LF
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 20 20 20
+      20 20 20 20 20 0D 0A   
+0494  24        00101             DB      EOS
+                00102 ;
+                00103 ;
+0495  1B5B3330  00104 BLACK       DB      ESC, BRACKET, '30m', EOS
+      6D 24                  
+049B  1B5B3331  00105 RED         DB      ESC, BRACKET, '31m', EOS
+      6D 24                  
+04A1  1B5B3332  00106 GREEN       DB      ESC, BRACKET, '32m', EOS
+      6D 24                  
+04A7  1B5B3333  00107 YELLOW      DB      ESC, BRACKET, '33m', EOS
+      6D 24                  
+04AD  1B5B3334  00108 BLUE        DB      ESC, BRACKET, '34m', EOS
+      6D 24                  
+04B3  1B5B3335  00109 MAGENTA     DB      ESC, BRACKET, '35m', EOS
+      6D 24                  
+04B9  1B5B3336  00110 CYAN        DB      ESC, BRACKET, '36m', EOS
+      6D 24                  
+04BF  1B5B3337  00111 WHITE       DB      ESC, BRACKET, '37m', EOS
+      6D 24                  
+04C5  1B5B306D  00112 RESET       DB      ESC, BRACKET,  '0m', EOS
+      24                     
+                00113 ;
+                00114 ;
+04CA  1B5B303B  00115 TOPLEFT     DB      ESC, BRACKET, '0;0H', EOS
+      30 48 24               
+                00116 ;
+                00117 ENDPROG     END                     ; assembly stops here
+
+
+BDOS            0005  BLACK           0495  BLUE            04AD  
+BRACKET         005B  CR              000D  CYAN            04B9  
+ENDPROG         04D1  EOS             0024  ESC             001B  
+GAWMANDL        0100  GREEN           04A1  LF              000A  
+LOGO            011F  MAGENTA         04B3  PRTSCR          0009  
+RED             049B  RESET           04C5  START           0000  
+TOPLEFT         04CA  WHITE           04BF  YELLOW          04A7  
+
