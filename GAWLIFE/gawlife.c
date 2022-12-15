@@ -7,9 +7,11 @@
  *   0.1  : Initial code base
  *   0.2  : re-setup arrays, no strings, just plain char's
  *          long arrays of char's, (MAXROW+1)*(MAXCOL+1) long
+ *   0.3  : new sample picture of working program
+ *          implemented memset() function to speed things up
  *   
  * ------------------------------------------------------------------------- */
-#define VERSION "0.2"
+#define VERSION "0.3"
 /* ------------------------------------------------------------------------- *
  *             GNU LICENSE CONDITIONS
  * ------------------------------------------------------------------------- *
@@ -231,12 +233,7 @@ void nextGeneration() {
  *                                                Clear next generation grid
  * ------------------------------------------------------------------------- */
 void clearNextGen() {
-    int row, col;
-    for (row=0; row <= MAXROW; row++) {
-        for (col=0; col <= MAXCOL; col++) {
-            nextGrid[row*(MAXCOL+1)+col] = ' ';
-        }
-    }
+    memset( nextGrid, ' ', (MAXROW+1)*(MAXCOL+1) );
 }
 
 
