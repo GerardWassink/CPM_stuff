@@ -5,6 +5,7 @@
 ;* Purpose: Logo for my machine
 ;* Versions:
 ;*   0.1  : Initial code base
+;*   0.2  : Adapted for Z80ASM assembler
 ;*   
 ;* ------------------------------------------------------------------------- *
 ;
@@ -48,31 +49,31 @@ EOS         EQU     '$'
 ;* ------------------------------------------------------------------------- *
 ;*                                                                 MAIN LINE *
 ;* ------------------------------------------------------------------------- *
-GAWMANDL    PUSH    B               ; Save
-            PUSH    D               ;  registers
-            PUSH    H               ;   on the stack
+GAWMANDL    PUSH    BC              ; Save
+            PUSH    DE              ;  registers
+            PUSH    HL              ;   on the stack
             ;
             ; Print header lines
             ;
-            MVI     C,PRTSCR        ; Print string function in reg C
-            LXI     D,CYAN          ; Data address in DE
+            LD      C,PRTSCR        ; Print string function in reg C
+            LD      DE,CYAN         ; Data address in DE
             CALL    BDOS            ; Call BDOS for print string function
             ;
-            MVI     C,PRTSCR        ; Print string function in reg C
-            LXI     D,LOGO       ; Data address in DE
+            LD      C,PRTSCR        ; Print string function in reg C
+            LD      DE,LOGO         ; Data address in DE
             CALL    BDOS            ; Call BDOS for print string function
             ;
             ; Reset screen attributes
             ;
-            MVI     C,PRTSCR        ; Print string function in reg C
-            LXI     D,RESET         ; Data address in DE
+            LD      C,PRTSCR        ; Print string function in reg C
+            LD      DE,RESET        ; Data address in DE
             CALL    BDOS            ; Call BDOS for print string function
             ;
             ; Program end, restore registers and return
             ;
-            POP     H               ; Restore registers
-            POP     D               ;  from the
-            POP     B               ;   stack
+            POP     HL              ; Restore registers
+            POP     DE              ;  from the
+            POP     BC              ;   stack
             ;
             RET                     ; Go back to caller
             ;
@@ -112,9 +113,5 @@ RESET       DB      ESC, BRACKET,  '0m', EOS
 ;
 ;
 TOPLEFT     DB      ESC, BRACKET, '0;0H', EOS
-;
-    ; Variables
-;
-;
 ;
 ENDPROG     END                     ; assembly stops here

@@ -1,0 +1,191 @@
+                00001 ;* ------------------------------------------------------------------------- *
+                00002 ;* Name   : GAWGETIM
+                00003 ;* Author : Gerard Wassink
+                00004 ;* Date   : December 25, 2021
+                00005 ;* Purpose: Get RTC time on the RC2014 CP/M computer
+                00006 ;* Versions:
+                00007 ;*   0.1  : Initial code base, and 1st ASM program on CP/M
+                00008 ;*   0.2  : Code cleanup and optimisation
+                00009 ;*   0.3  : Return to CP/M using Warm Reboot
+                00010 ;*   0.4  : Check return code from RTC
+                00011 ;*   0.5  : Changed to Z80ASM
+                00012 ;*   
+                00013 ;* ------------------------------------------------------------------------- *
+                00014 ;
+                00015 ;* ------------------------------------------------------------------------- *
+                00016 ;*             GNU LICENSE CONDITIONS
+                00017 ;* ------------------------------------------------------------------------- *
+                00018 ;* This program is free software; you can redistribute it and/or modify
+                00019 ;* it under the terms of the GNU General Public License as published by
+                00020 ;* the Free Software Foundation; either version 2 of the License, or
+                00021 ;* (at your option) any later version.
+                00022 ;*
+                00023 ;* This program is distributed in the hope that it will be useful,
+                00024 ;* but WITHOUT ANY WARRANTY; without even the implied warranty of
+                00025 ;* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+                00026 ;* GNU General Public License for more details.
+                00027 ;*
+                00028 ;* You should have received a copy of the GNU General Public License along
+                00029 ;* with this program; if not, write to the Free Software Foundation, Inc.,
+                00030 ;* 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+                00031 ;*
+                00032 ;* ------------------------------------------------------------------------- *
+                00033 ;*       Copyright (C) December 2021 Gerard Wassink
+                00034 ;* ------------------------------------------------------------------------- *
+                00035 ;
+                00036 START       ORG     0100H
+                00037 ;
+                00038 ; BDOS and BIOS addresses and functions
+                00039 ;
+    = 0000      00040 WARMBOOT    EQU     0000H           ; Warm Reboot
+    = 0005      00041 BDOS        EQU     0005H           ; BDOS address
+    = 0009      00042 PRTSCR      EQU     009H            ; Print $ terminated string function
+                00043 ;
+    = 0020      00044 RTCGTTM     EQU     020H            ; Get HBIOS time
+                00045 ;
+                00046 ;* ------------------------------------------------------------------------- *
+                00047 ;*                                                                 MAIN LINE *
+                00048 ;* ------------------------------------------------------------------------- *
+0100  C5        00049 GAWGETIM    PUSH    BC              ; Save
+0101  D5        00050             PUSH    DE              ;  registers
+0102  E5        00051             PUSH    HL              ;   on the stack
+                00052             ;
+                00053             ;       Display starter message
+                00054             ;
+0103  0E09      00055             LD      C,PRTSCR        ; Print string function in reg C
+0105  116A01    00056             LD      DE,MSG000       ; Data address in DE
+0108  CD0500    00057             CALL    BDOS            ; Call BDOS for print string function
+                00058             ;
+                00059             ;       Get time from RTC (Real Time Clock)
+                00060             ;
+010B  0620      00061             LD      B,RTCGTTM       ; BIOS RTCGETTIM function
+010D  216401    00062             LD      HL,TIMBUF       ; HL points to buffer for BIOS time
+0110  CF        00063             RST     08H             ; Call BIOS function 08H (8 times specified value)
+                00064             ;
+                00065             ;       Check return code
+                00066             ;
+0111  CA1F01    00067             JP      Z, RTC$OK       ; A=0: OKAY, else error
+                00068             ;
+                00069             ;       Display error message
+                00070             ;
+0114  0E09      00071             LD      C,PRTSCR        ; Print string function in reg C
+0116  118101    00072             LD      DE,MSG001       ; Data address in DE
+0119  CD0500    00073             CALL    BDOS            ; Call BDOS for print string function
+                00074             ;
+011C  C33901    00075             JP      ENDMAIN         ; Go back to CP/M
+                00076             ;
+                00077             ;       Convert date from BCD to Ascii
+                00078             ;
+                00079 RTC$OK      EQU $
+011F  016401    00080             LD      BC,BCDDATE      ; BC points to value to convert
+0122  11C901    00081             LD      DE,DSPDATE      ; DE points to receiving buffer
+0125  CD3F01    00082             CALL    BCD2ASCII       ; Convert BCD to displayable
+                00083             ;
+                00084             ;       Convert time from BCD to Ascii
+                00085             ;
+0128  016701    00086             LD      BC,BCDTIME      ; BC points to value to convert
+012B  11D301    00087             LD      DE,DSPTIME      ; DE points to receiving buffer
+012E  CD3F01    00088             CALL    BCD2ASCII       ; Convert BCD to displayable
+                00089             ;
+                00090             ;       Print result string
+                00091             ;
+0131  0E09      00092             LD      C,PRTSCR        ; Print string function in reg C
+0133  11A701    00093             LD      DE,DISPLTIM     ; Data address in DE
+0136  CD0500    00094             CALL    BDOS            ; Call BDOS for print string function
+                00095             ;
+                00096             ;       Program end, restore registers and return
+                00097             ;
+                00098 ENDMAIN     EQU $
+0139  E1        00099             POP     HL              ; Restore registers
+013A  D1        00100             POP     DE              ;  from the
+013B  C1        00101             POP     BC              ;   stack
+                00102             ;
+013C  C30000    00103             JP      WARMBOOT        ; Back to CP/M
+                00104             ;
+                00105 ;* ------------------------------------------------------------------------- *
+                00106 ;*                 Convert BCD values to ascii bytes for display (BCD2ASCII) *
+                00107 ;* ------------------------------------------------------------------------- *
+                00108 BCD2ASCII    EQU     $
+                00109             ;
+                00110             ;       Initialize counter
+                00111             ;
+013F  3E03      00112             LD      A,03H           ; load counter for 3 times
+0141  326301    00113             LD      (COUNT),A       ;  and store it
+                00114             ;
+                00115             ;       Loop start
+                00116             ;
+0144  0A        00117 BCDAGAIN:   LD      A,(BC)          ; load BCD value
+0145  E6F0      00118             AND     0F0H            ;  Isolate first nibble
+0147  0F        00119             RRCA                    ;   Rotate
+0148  0F        00120             RRCA                    ;    register
+0149  0F        00121             RRCA                    ;     A for
+014A  0F        00122             RRCA                    ;     four times
+014B  F630      00123             OR      030H            ;      make Ascii number
+014D  12        00124             LD      (DE),A          ; Store printable value 1st part
+                00125             ;
+014E  13        00126             INC     DE              ; Increment DE for next store
+                00127             ;
+014F  0A        00128             LD      A,(BC)          ; load value again
+0150  E60F      00129             AND     00FH            ;  Isolate second nibble
+0152  F630      00130             OR      030H            ;   Make Ascii number
+0154  12        00131             LD      (DE),A          ; Store printable value 2nd part
+                00132             ;
+                00133             ;       Increment pointers to next values
+                00134             ;
+0155  03        00135             INC     BC              ; Point to next BCD byte
+0156  13        00136             INC     DE              ; Point to 
+0157  13        00137             INC     DE              ;   next Ascii value
+                00138             ;
+                00139             ;       Check for loop end, go around if not
+                00140             ;
+0158  3A6301    00141             LD      A,(COUNT)       ; Get counter value,
+015B  3D        00142             DEC     A               ;  decrement it
+015C  326301    00143             LD      (COUNT),A       ;   store counter back
+                00144             ;
+015F  C24401    00145             JP      NZ,BCDAGAIN     ; Not done? Again
+                00146             ;
+0162  C9        00147             RET
+                00148             ;
+                00149 ;* ------------------------------------------------------------------------- *
+                00150 ;*                                                              DATA STORAGE *
+                00151 ;* ------------------------------------------------------------------------- *
+0163  03        00152 COUNT       DB      03H             ; Counter storage
+                00153             ;
+                00154 TIMBUF      EQU     $               ; Reserve room for date / time buffer
+0164  000000    00155 BCDDATE     DB      00H, 00H, 00H
+0167  000000    00156 BCDTIME     DB      00H, 00H, 00H
+                00157 ;
+016A  47415747  00158 MSG000      DB      'GAWGETIM version 0.5', 0DH, 0AH, '$'
+      45 54 49 4D 20 76 65 72
+      73 69 6F 6E 20 30 2E 35
+      0D 0A 24               
+0181  4572726F  00159 MSG001      DB      'Error retrieving time, RTC present?', 0DH, 0AH, '$'
+      72 20 72 65 74 72 69 65
+      76 69 6E 67 20 74 69 6D
+      65 2C 20 52 54 43 20 70
+      72 65 73 65 6E 74 3F 0D
+      0A 24                  
+                00160 ;
+                00161 DISPLTIM    EQU     $               ; Reserve room for displayable time
+01A7  43757272  00162             DB      'Current date and time from RTC: 20'
+      65 6E 74 20 64 61 74 65
+      20 61 6E 64 20 74 69 6D
+      65 20 66 72 6F 6D 20 52
+      54 43 3A 20 32 30      
+01C9  30302D30  00163 DSPDATE     DB      '00-00-00, '    ; YEAR, MONTH,DAY
+      30 2D 30 30 2C 20      
+01D3  30303A30  00164 DSPTIME     DB      '00:00:00'      ; HOURS, MINUTES,SECONDS
+      30 3A 30 30            
+01DB  0D0A      00165             DB      0DH, 0AH        ; CR/LF
+01DD  24        00166             DB      '$'             ; End of string character
+                00167 ;
+                00168 ENDPROG     END
+
+
+BCD2ASCII       013F  BCDAGAIN        0144  BCDDATE         0164  
+BCDTIME         0167  BDOS            0005  COUNT           0163  
+DISPLTIM        01A7  DSPDATE         01C9  DSPTIME         01D3  
+ENDMAIN         0139  ENDPROG         01DE  GAWGETIM        0100  
+MSG000          016A  MSG001          0181  PRTSCR          0009  
+RTC$OK          011F  RTCGTTM         0020  START           0000  
+TIMBUF          0164  WARMBOOT        0000  
