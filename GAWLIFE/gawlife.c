@@ -34,14 +34,34 @@
  * ------------------------------------------------------------------------- */
 
 #include <stdio.h>
-#include <strings.h>
+#include <string.h>
+
+
+/* ------------------------------------------------------------------------- *
+ *                                             OBJECT environment definition
+ * ------------------------------------------------------------------------- */
+//#define OBJECT_LINUX
+#define OBJECT_CPM
+//#define OBJECT_DOS
 
 
 /* ------------------------------------------------------------------------- *
  *                                                      CONSTANT definitions
  * ------------------------------------------------------------------------- */
+#ifdef  OBJECT_CPM
 #define MAXROW 15
 #define MAXCOL 63
+#endif
+
+#ifdef  OBJECT_LINUX
+#define MAXROW 31
+#define MAXCOL 127
+#endif
+
+#ifdef  OBJECT_DOS
+#define MAXROW 31
+#define MAXCOL 127
+#endif
 
 
 /* ------------------------------------------------------------------------- *
@@ -52,7 +72,7 @@ void    clearNextGen();
 void    displayLifeGrid();
 void    swapGrids();
 void    Initialize();
-int     inputCharacter();
+char    inputCharacter();
 void    Goodbye();
 void    clearScreen();
 
@@ -62,6 +82,7 @@ void    clearScreen();
  * ------------------------------------------------------------------------- */
 
 static char *template[MAXROW+1] = {
+//       ....+....1....+....2....+....3....+....4....+....5....+....6....+....7....+....8....+....9....+....0....+....1....+....2....+...
         "                                                                ",
         "                                                                ",
         "        ***   ***        **                                     ",
@@ -78,8 +99,8 @@ static char *template[MAXROW+1] = {
         "                                                                ",
         "        ***   ***                                               ",
         "                                                                "
-};
-/*       ....+....1....+....2....+....3....+....4....+....5....+....6.... */
+}; //    ....+....1....+....2....+....3....+....4....+....5....+....6.... 
+
 
 static char grid1[(MAXROW+1)*(MAXCOL+1)];       // grids are one continuous
 static char grid2[(MAXROW+1)*(MAXCOL+1)];       //  'line' of characters
@@ -301,10 +322,10 @@ void Initialize() {
 /* ------------------------------------------------------------------------- *
  *                                                       Input one character
  * ------------------------------------------------------------------------- */
-int inputCharacter() {    
-    int i;
-    scanf("%c", &i);
-    return i;
+char inputCharacter() {    
+    char c;
+    c = getchar();
+    return c;
 }
 
 
